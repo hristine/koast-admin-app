@@ -45,7 +45,7 @@ angular.module('koastAdminApp.sections.backup.backup-controller', [
               id: id
             })
               .then(function (status) {
-                vm.percent = (status.status === 'saved') ? 50 : 100;
+                vm.percent = (status.status === 'in-progress') ? 50 : 100;
                 if (vm.percent >= 100) {
                   $interval.cancel(backingupInterval);
                   vm.toggleModal();
