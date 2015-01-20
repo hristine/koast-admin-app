@@ -16,14 +16,18 @@
 </p>
 
 <!-- List of backups -->
-<ul class="item-list">
-  <li ng-repeat="backup in backupCtrl.backups">
-    {{backup.receipts[0].data.key}}
-    <button class="btn btn--outline"
-            ng-click="backupCtrl.restoreBackup(backup.id)"
-            ng-disabled="backupCtrl.restoringBackup">restore</button>
-  </li>
-</ul>
+<table class="backup-list">
+  <tbody>
+    <tr ng-repeat="backup in backupCtrl.backups">
+      <td>{{backup.name}}</td>
+      <td>{{backup.timestamp | date:'yyyy-MM-dd'}}</td>
+      <td><button class="btn btn--outline pull-right"
+            ng-click="backupCtrl.confirmRestore(backup)"
+            ng-disabled="backupCtrl.restoringBackup">Restore</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <div class="empty-state" ng-show="!backupCtrl.backups || backupCtrl.backups.length === 0">
   <div class="empty-state__tag">
@@ -31,6 +35,39 @@
     <i class="fa fa-database fa-5x"></i>
     <!-- Main Title -->
     <h3 class="empty-state__title">No backups found</h3>
+  </div>
+</div>
+
+<div ng-class="{ false: 'modal', true: 'modal--show' }[backupCtrl.confirmingRestore]">
+  <!-- Overlay -->
+  <div class="overlay" ng-click="backupCtrl.cancelRestore()"></div>
+  <!-- Modal Content -->
+  <div class="modal__contents modal--transition">
+    <!-- Close button -->
+    <h3 class="modal__header">
+      <a class="modal__close" href="" ng-click="backupCtrl.cancelRestore()">&times;</a>
+      Confirm Restore
+    </h3>
+    <div class="backup">
+      <h4>Backup : {{ backupCtrl.toRestore.name }}</h4>
+      <h4>Created On : {{ backupCtrl.toRestore.timestamp  | date:'yyyy-MM-dd'}}</h4>
+
+      <h4>Collections</h4>
+      <ul>
+        <li ng-repeat="receipt in backupCtrl.toRestore.receipts">{{ receipt.collection }}</li>
+        <li ng-show="backupCtrl.toRestore.receipts.length === 0">None selected</li>
+      </ul>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--outline"
+              ng-click="backupCtrl.cancelRestore()"
+              ng-disabled="backupCtrl.restoringBackup">Cancel</button>
+
+      <button class="btn btn--success"
+              ng-click="backupCtrl.restoreBackup(backupCtrl.toRestore.backupId)"
+              ng-disabled="backupCtrl.restoringBackup">OK</button>
+    </div>
+
   </div>
 </div>
 
@@ -47,15 +84,21 @@
       Create a Backup
     </h3>
 
-    <form name='backup'>
+    <form name='backupForm' novalidate>
       <fieldset>
         <div class="input-wrapper">
           <label>Name</label>
           <input
-          ng-class="{ false: 'alert', true: 'success' }[!!backupName]"
+          name="backupName"
+          ng-class="{ false: 'alert', true: 'success' }[backupForm.backupName.$valid]"
           ng-required="true"
           type="text"
-          ng-model="backupName"/>
+          ng-pattern='/^\S*$/'
+          ng-model="backupCtrl.backupName"/>
+          <span class="alert--danger"
+                ng-show="backupForm.backupName.$error.pattern">
+            Name can not contain spaces
+          </span>
         </div>
         <div class="input-wrapper">
           <label>Collections (comma separated)</label>
@@ -74,8 +117,8 @@
                  name="aws"
                  value="s3"
                  id="aws"
-                 ng-model="backupType"
-                 ng-required="!backupType">
+                 ng-model="backupCtrl.backupType"
+                 ng-required="!backupCtrl.backupType">
           <label class="radio-label" for="aws">AWS S3</label>
         </div>
         <div class="input-wrapper">
@@ -83,9 +126,9 @@
                  name="localFS"
                  value="local"
                  id="localFS"
-                 ng-model="backupType"
-                 ng-required="!backupType">
-          <label class="radio-label" for="localFS">Choice 2</label>
+                 ng-model="backupCtrl.backupType"
+                 ng-required="!backupCtrl.backupType">
+          <label class="radio-label" for="localFS">Local FS</label>
         </div>
       </fieldset>
 
@@ -95,11 +138,13 @@
 
       <div ng-hide="creatingBackup" class="input-wrapper animate-scale--l-c">
         <button class="btn"
-                ng-click="backupCtrl.toggleModal()">
+                type="button"
+                ng-click="backupCtrl.toggleModal();">
                   Cancel
         </button>
         <button class="btn btn--success"
-                ng-click="backupCtrl.createBackup(backupName, backupCtrl.collections(), backupType)"
+                type="submit"
+                ng-click="backupCtrl.createBackup(backupCtrl.backupName, backupCtrl.collections(), backupCtrl.backupType)"
                 ng-disabled="backupCtrl.creatingBackup">
                   Create
         </button>

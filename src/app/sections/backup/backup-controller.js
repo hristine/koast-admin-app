@@ -1,22 +1,33 @@
 'use strict';
 angular.module('koastAdminApp.sections.backup.backup-controller', [
-    'koastAdminApp.sections.backup.backup-controller'
-  ])
-  .controller('backupCtrl', function ($interval, backup, tagList) {
+  'koastAdminApp.sections.backup.backup-controller'
+])
+  .controller('backupCtrl', function ($rootScope, $interval, backup, tagList) {
     var vm = this;
+    vm.$rootScope = $rootScope;
+    vm.$interval = $interval;
 
     vm.isModalVisible = false;
     vm.toggleModal = function () {
       vm.isModalVisible = !vm.isModalVisible;
+      if (vm.isModalVisible === true) {
+        init();
+      }
     };
 
-    vm.collections = function () {
-        return tagList.val('collections');
-      },
+    function init() {
+      vm.backupName = '';
+      vm.backupType = null;
+      tagList.requestReset();
+    }
 
-      backup.list()
+    vm.collections = function () {
+      return tagList.val('collections');
+    };
+
+    vm.backups = [];
+    backup.list()
       .then(function (backups) {
-        console.log(backups);
         vm.backups = backups;
       });
 
@@ -31,18 +42,21 @@ angular.module('koastAdminApp.sections.backup.backup-controller', [
 
       backup.createBackup(name, collections, type)
         .then(function (receipt) {
-          console.log(receipt);
           var id = receipt.id;
           backingupInterval = $interval(function () {
             backup.status({
-                id: id
-              })
+              id: id
+            })
               .then(function (status) {
-                vm.percent = (status.status === 'saved') ? 50 : 100;
+                vm.percent = (status.status === 'in-progress') ? 50 : 100;
                 if (vm.percent >= 100) {
                   $interval.cancel(backingupInterval);
                   vm.toggleModal();
                   vm.creatingBackup = false;
+                  backup.details({id: id})
+                    .then(function (backupDetails) {
+                      vm.backups.push(backupDetails);
+                    });
                 }
               });
           }, 100);
@@ -55,8 +69,20 @@ angular.module('koastAdminApp.sections.backup.backup-controller', [
         });
     };
 
+    vm.confirmingRestore = false;
+    vm.confirmRestore = function(backupToRestore) {
+      vm.confirmingRestore = true;
+      vm.toRestore = backupToRestore;
+    };
+
+    vm.cancelRestore = function() {
+      vm.confirmingRestore = false;
+      vm.toRestore = {};
+    };
+
     var restoringInterval;
     vm.restoreBackup = function (id) {
+      vm.confirmingRestore = false;
       vm.restoringBackup = true;
       vm.restoringPercent = 0;
       vm.restoringName = id;
@@ -64,8 +90,8 @@ angular.module('koastAdminApp.sections.backup.backup-controller', [
         .then(function (receipt) {
           restoringInterval = $interval(function () {
             backup.status({
-                id: id
-              })
+              id: id
+            })
               .then(function (status) {
                 vm.restoringPercent = status.completed;
                 if (vm.restoringPercent >= 100) {
