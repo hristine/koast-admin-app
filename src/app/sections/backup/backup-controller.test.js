@@ -2,9 +2,27 @@
 
 describe('backupCtrl:', function () {
   var backupCtrl,
-    tagList = {},
     backupRecord = {
       backupId: '34072750-9b3a-11e4-adf0-8b69b77a50cb',
+      receipts: [
+        {
+          collection: 'tasks',
+          data: {
+            bucket: 'mock-bucket',
+            key: 'mock'
+          }
+        },
+        {
+          collection: 'users',
+          data: {
+            bucket: 'mock-bucket',
+            key: 'mock'
+          }
+        }
+      ]
+    },
+    createdRecord = {
+      backupId: '11111111-9b3a-11e4-adf0-8b69b77a50cb',
       receipts: [
         {
           collection: 'tasks',
@@ -25,7 +43,7 @@ describe('backupCtrl:', function () {
 
   beforeEach(module('koastAdminApp.sections.backup.backup-controller'));
 
-  beforeEach(inject(function ($controller, $interval, $q) {
+  beforeEach(inject(function ($controller, $interval, $q, $rootScope) {
     var mockBackup = {
       list: function () {
         return $q.when([backupRecord]);
@@ -34,15 +52,39 @@ describe('backupCtrl:', function () {
         var deferred = $q.defer();
         deferred.resolve('done');  // this is what seems to happen currently.
         return deferred.promise;
+      },
+      createBackup: function(name, collections, type) {
+        return $q.when({id: '11111111-9b3a-11e4-adf0-8b69b77a50cb'});
+      },
+      status: function(id) {
+        return $q.when({'status': 'saved'});
+      },
+      details: function(id) {
+        return $q.when(createdRecord)
       }
+    },
+    tagList = {
+      requestReset: function () {}
     };
 
     backupCtrl = $controller('backupCtrl', {
-      $interal: $interval,
+      $rootScope: $rootScope,
+      $interval: $interval,
       backup: mockBackup,
       tagList: tagList
     });
+    backupCtrl.$rootScope.$apply();
   }));
+
+  it('should add an item to the list of backups when a backup is created', function () {
+    expect(backupCtrl.backups.length).to.be.equal(1);
+
+    backupCtrl.createBackup('test', ['test'], 'local');
+    backupCtrl.$rootScope.$apply();
+    backupCtrl.$interval.flush(200);
+
+    expect(backupCtrl.backups.length).to.be.equal(2);
+  });
 
   it('should show a dialog when restore is clicked', function () {
     expect(backupCtrl.confirmingRestore).to.be.false();
