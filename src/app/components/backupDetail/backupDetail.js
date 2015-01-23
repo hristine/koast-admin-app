@@ -1,0 +1,1 @@
+angular.module('koastAdminApp.components.backupDetail', ['koastAdminApp.components.backupDetail.backupDetail-directive']);

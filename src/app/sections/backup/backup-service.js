@@ -22,6 +22,10 @@ angular.module('koastAdminApp.sections.backup.backup-service', [])
         });
       },
 
+      deleteBackup: function(id) {
+        return api.callMethod('backup', 'remove', id)
+      },
+
       //ask for the status of a particular inprogress backup
       //where id is the id from the backup receipt
       status: function (id) {

@@ -27,6 +27,10 @@
             ng-click="backupCtrl.confirmRestore(backup)"
             ng-disabled="backupCtrl.restoringBackup">Restore</button>
       </td>
+      <td><button class="btn btn--danger pull-right"
+            ng-click="backupCtrl.confirmDelete(backup)"
+            ng-disabled="backupCtrl.restoringBackup">Delete</button>
+      </td>
     </tr>
   </tbody>
 </table>
@@ -40,6 +44,7 @@
   </div>
 </div>
 
+<!-- Confirm restore modal -->
 <div ng-class="{ false: 'modal', true: 'modal--show' }[backupCtrl.confirmingRestore]">
   <!-- Overlay -->
   <div class="overlay" ng-click="backupCtrl.cancelRestore()"></div>
@@ -50,16 +55,9 @@
       <a class="modal__close" href="" ng-click="backupCtrl.cancelRestore()">&times;</a>
       Confirm Restore
     </h3>
-    <div class="backup">
-      <h4>Backup : {{ backupCtrl.toRestore.name }}</h4>
-      <h4>Created On : {{ backupCtrl.toRestore.timestamp  | date:'yyyy-MM-dd'}}</h4>
 
-      <h4>Collections</h4>
-      <ul>
-        <li ng-repeat="receipt in backupCtrl.toRestore.receipts">{{ receipt.collection }}</li>
-        <li ng-show="backupCtrl.toRestore.receipts.length === 0">None selected</li>
-      </ul>
-    </div>
+    <backup-detail backup="backupCtrl.toRestore"></backup-detail>
+
     <div class="modal__footer">
       <button class="btn btn--outline"
               ng-click="backupCtrl.cancelRestore()"
@@ -69,7 +67,30 @@
               ng-click="backupCtrl.restoreBackup(backupCtrl.toRestore.backupId)"
               ng-disabled="backupCtrl.restoringBackup">OK</button>
     </div>
+  </div>
+</div>
 
+<!-- Confirm delete modal -->
+<div ng-class="{ false: 'modal', true: 'modal--show' }[backupCtrl.confirmingDelete]">
+  <!-- Overlay -->
+  <div class="overlay" ng-click="backupCtrl.cancelDelete()"></div>
+  <!-- Modal Content -->
+  <div class="modal__contents modal--transition">
+    <!-- Close button -->
+    <h3 class="modal__header">
+      <a class="modal__close" href="" ng-click="backupCtrl.cancelDelete()">&times;</a>
+      Confirm Deletion
+    </h3>
+
+    <backup-detail backup="backupCtrl.toDelete"></backup-detail>
+
+    <div class="modal__footer">
+      <button class="btn btn--outline"
+              ng-click="backupCtrl.cancelDelete()">Cancel</button>
+
+      <button class="btn btn--success"
+              ng-click="backupCtrl.deleteBackup(backupCtrl.toDelete.backupId)">OK</button>
+    </div>
   </div>
 </div>
 

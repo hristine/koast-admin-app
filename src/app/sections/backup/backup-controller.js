@@ -72,6 +72,28 @@ angular.module('koastAdminApp.sections.backup.backup-controller', [
         });
     };
 
+    vm.confirmingDelete = false;
+    vm.confirmDelete = function(backupToDelete) {
+      vm.confirmingDelete = true;
+      vm.toDelete = backupToDelete;
+    };
+
+    vm.cancelDelete = function() {
+      vm.confirmingDelete = false;
+      vm.toDelete = {};
+    };
+
+    vm.deleteBackup = function (id) {
+      backup.deleteBackup({id: id})
+        .then(function () {
+          vm.confirmingDelete = false;
+          vm.backups = R.filter(function(backupRecord) {
+            return backupRecord.backupId !== id;
+          }, vm.backups);
+          vm.toDelete = {};
+        });
+    };
+
     vm.confirmingRestore = false;
     vm.confirmRestore = function(backupToRestore) {
       vm.confirmingRestore = true;

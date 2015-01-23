@@ -56,6 +56,9 @@ describe('backupCtrl:', function () {
       createBackup: function(name, collections, type) {
         return $q.when({id: '11111111-9b3a-11e4-adf0-8b69b77a50cb'});
       },
+      deleteBackup: function(id) {
+        return $q.when({'status': 'done'});
+      },
       status: function(id) {
         return $q.when({'status': 'saved'});
       },
@@ -86,6 +89,44 @@ describe('backupCtrl:', function () {
     expect(backupCtrl.backups.length).to.be.equal(2);
   });
 
+  it('should remove an item from the list of backups when a backup is deleted', function() {
+    expect(backupCtrl.backups.length).to.be.equal(1);
+    backupCtrl.deleteBackup('34072750-9b3a-11e4-adf0-8b69b77a50cb');
+
+    backupCtrl.$rootScope.$apply();
+
+    expect(backupCtrl.backups.length).to.be.equal(0);
+    expect(backupCtrl.toDelete).to.be.empty();
+    expect(backupCtrl.confirmingDelete).to.be.false();
+  });
+
+  describe('verify correct effects happen from backup delete confirmation dialog', function () {
+    beforeEach(function () {
+      backupCtrl.toDelete = backupRecord;
+      backupCtrl.confirmingDelete = true;
+    });
+
+    it('should delete when OK is clicked in the confirmation dialog', function () {
+      backupCtrl.deleteBackup(backupRecord.backupId);
+
+      backupCtrl.$rootScope.$apply();
+
+      expect(backupCtrl.confirmingDelete).to.be.false();
+      expect(backupCtrl.toDelete).to.be.empty();
+      expect(backupCtrl.backups).to.be.empty();
+    });
+
+    it('should not delete when Cancel is clicked in the confirmation dialog', function () {
+      backupCtrl.cancelDelete();
+
+      backupCtrl.$rootScope.$apply();
+
+      expect(backupCtrl.confirmingDelete).to.be.false();
+      expect(backupCtrl.toDelete).to.be.empty();
+      expect(backupCtrl.backups).to.be.not.empty();
+    });
+  });
+
   it('should show a dialog when restore is clicked', function () {
     expect(backupCtrl.confirmingRestore).to.be.false();
     expect(backupCtrl.restoringBackup).to.be.not.ok();
@@ -100,7 +141,7 @@ describe('backupCtrl:', function () {
   describe('verify correct effects happen from backup restore confirmation dialog', function () {
     beforeEach(function () {
       backupCtrl.toRestore = backupRecord;
-      backupCtrl.confirmingRestore = true;      
+      backupCtrl.confirmingRestore = true;
     });
 
     it('should start restoring when OK is clicked in the confirmation dialog', function () {

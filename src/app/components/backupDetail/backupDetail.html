@@ -1,0 +1,10 @@
+<div class="backup">
+  <h4>Backup : {{ backup.name }}</h4>
+  <h4>Created On : {{ backup.timestamp  | date:'yyyy-MM-dd'}}</h4>
+
+  <h4>Collections</h4>
+  <ul>
+    <li ng-repeat="receipt in backup.receipts">{{ receipt.collection }}</li>
+    <li ng-show="backup.receipts.length === 0">None selected</li>
+  </ul>
+</div>
