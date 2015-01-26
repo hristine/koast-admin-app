@@ -21,6 +21,7 @@
 <table class="backup-list">
   <tbody>
     <tr ng-repeat="backup in backupCtrl.backups">
+      <td><status-information backup="backup"></status-information></td>
       <td>{{backup.name}}</td>
       <td>{{backup.timestamp | date:'yyyy-MM-dd'}}</td>
       <td><button class="btn btn--outline pull-right"

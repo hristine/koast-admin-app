@@ -1,0 +1,1 @@
+angular.module('koastAdminApp.components.statusInformation', ['koastAdminApp.components.statusInformation.statusInformation-directive']);
